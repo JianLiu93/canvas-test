@@ -10,7 +10,7 @@
 </head>
 
 <body>
-	<canvas class="canvas" width="100vw" height="100vh">
+	<canvas class="canvas">
 		您的浏览器不支持canvas模块，请升级浏览器。
 	</canvas>
 	<script>
@@ -35,39 +35,41 @@
 			ctx.lineTo(x1, y1);
 			ctx.stroke();
 		}
-		// 电脑端监听鼠标事件
-		canvas.onmousedown = function (e) {
-			painting = true;
-			last = [e.clientX, e.clientY];
-			console.log(last);
-		}
-
-		canvas.onmousemove = function (e) {
-			if (painting === true) {
-				drawLine(last[0], last[1], e.clientX, e.clientY);
-				last = [e.clientX, e.clientY];
-			} else {
-				console.log('none');
-			}
-		}
-
-		canvas.onmouseup = function () {
-			painting = false;
-
-		}
 
 		// 手机端监听触摸屏
 		var isTouchDevice = 'ontouchstart' in document.documentElement;
 
 		if (isTouchDevice) {
 			canvas.ontouchstart = function (e) {
-				let last = [e.touches[0].clientX, e.touches[0].clientY];
+				last = [e.touches[0].clientX, e.touches[0].clientY];
 			}
 			canvas.ontouchmove = function (e) {
 				console.log(e.touches[0]);
 				let x = e.touches[0].clientX;
 				let y = e.touches[0].clientY;
 				drawLine(last[0], last[1], x, y);
+				last = [x, y];
+			}
+		} else {
+			// 电脑端监听鼠标事件
+			canvas.onmousedown = function (e) {
+				painting = true;
+				last = [e.clientX, e.clientY];
+				console.log(last);
+			}
+
+			canvas.onmousemove = function (e) {
+				if (painting === true) {
+					drawLine(last[0], last[1], e.clientX, e.clientY);
+					last = [e.clientX, e.clientY];
+				} else {
+					console.log('none');
+				}
+			}
+
+			canvas.onmouseup = function () {
+				painting = false;
+
 			}
 		}
 	</script>
