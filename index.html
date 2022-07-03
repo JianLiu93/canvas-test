@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Canvas</title>
+	<link rel="stylesheet" href="canvas.css">
+</head>
+
+<body>
+	<div class="header">
+		<div class="color black active"></div>
+		<div class="color grey"></div>
+		<div class="color red"></div>
+		<div class="color blue"></div>
+		<div class="color green"></div>
+		<div class="color yellow"></div>
+		<div class="color pink"></div>
+		<div class="color purple"></div>
+		<div class="color orange"></div>
+		<div class="color skyblue"></div>
+		<div class="pen">
+			<div class="style normal active"><div class="normal"></div></div>
+			<div class="style blur"><div class="blur"></div></div>
+		</div>
+		<div class="delete"><img src="./delete.svg" width="30px"></div>
+	</div>
+	<div class="container">
+		<div class="aside">
+			<div class="line width1"><div class="width1"></div></div>
+			<div class="line width2"><div class="width2"></div></div>
+			<div class="line width4"><div class="width4"></div></div>
+			<div class="line width5 active"><div class="width5"></div></div>
+			<div class="line width7"><div class="width7"></div></div>
+			<div class="line width8"><div class="width8"></div></div>
+			<div class="line width10"><div class="width10"></div></div>
+		</div>
+		<canvas class="canvas">
+			您的浏览器不支持canvas模块，请升级浏览器。
+		</canvas>
+	</div>
+
+	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+	<!-- <script src="./throttle.js"></script> -->
+
+	<script>
+		const canvas = document.getElementsByClassName('canvas')[0];
+		const ctx = canvas.getContext('2d');
+
+		function throttle(fn, wait) {
+	let timer = null;
+	return (function(...args) {
+		if(timer) return;
+		fn.apply(this, args);
+		timer = setTimeout(() => {
+			timer = null;
+		}, wait)
+	});
+}
+
+		let strokeColor = '#000';
+		let lineThick = 5;
+		let lineBlur = false;
+		// 设置画布宽高等于浏览器窗口
+		canvas.width = document.documentElement.clientWidth - 44;
+		canvas.height = document.documentElement.clientHeight - 44;
+		// 填充和笔触颜色
+		ctx.fillStyle = 'black';
+		ctx.strokeStyle = strokeColor;
+		ctx.lineWidth = lineThick;
+		ctx.lineCap = 'round';
+		ctx.shadowColor = strokeColor;
+		ctx.shadowBlur = 0;
+		// 先设置绘图模式开关
+		let painting = false;
+		// 记录绘图时鼠标按下的位置，以连线
+		let last = [];
+		// 绘图起始时间
+		let lastTime;
+
+		// 绘图函数
+		function drawLine(x0, y0, x1, y1) {
+			ctx.beginPath();
+			ctx.moveTo(x0, y0);
+			ctx.lineTo(x1, y1);
+			ctx.stroke();
+			// console.log(x0, y0, x1, y1);
+		}
+
+		// 绑定颜色按钮
+		const colorBtns = $('.color');
+		for(let el of colorBtns) {
+			el.onclick = (e) => {
+				const name = e.target.className;
+				if(!name.includes('active')) {
+					$('.color').removeClass('active');
+					e.target.className +=' active';
+				}
+				
+				const style = getComputedStyle(e.target);
+				strokeColor = style.backgroundColor;
+				ctx.strokeStyle = strokeColor;
+				ctx.shadowColor = strokeColor;
+				console.log(strokeColor);
+			}
+		}
+		// 绑定线条粗细按钮
+		const lineBtns = $('.line');
+		for(let el of lineBtns) {
+			el.onclick = (e) => {
+				const name = e.currentTarget.className;
+				if(!name.includes('active')) {
+					$('.line').removeClass('active');
+					e.currentTarget.className +=' active';
+				}
+				const thick = name.match(/\d{1,2}/)[0];
+				lineThick = parseInt(thick);
+				ctx.lineWidth = lineThick;
+				ctx.shadowBlur = lineBlur? (lineThick + 1): 0;
+				console.log(lineThick);
+			}
+		}
+		// 绑定画笔样式 blur
+		const styleBtns = $('.style');
+		for(let el of styleBtns) {
+			el.onclick = (e) => {
+				const name = e.currentTarget.className;
+				if(!name.includes('active')) {
+					$('.style').removeClass('active');
+					e.currentTarget.className +=' active';
+				}
+				if(name.includes('blur')) {
+					lineBlur = true;
+					ctx.shadowBlur = lineThick + 1;
+					console.log('blur');
+				} else {
+					lineBlur = false;
+					ctx.shadowBlur = 0;
+				}
+			}
+		}
+		// 清空
+		$('.delete')[0].onclick = () => {
+			ctx.clearRect(0, 0, 2000, 2000);
+		}
+		
+		// 手机端监听触摸屏
+		const isTouchDevice = 'ontouchstart' in document.documentElement;
+
+		if (isTouchDevice) {
+			canvas.ontouchstart = (e) => {
+				last = [e.touches[0].clientX - 44, e.touches[0].clientY - 44];
+			}
+
+			canvas.ontouchmove = throttle((e) => {
+				let x = e.touches[0].clientX - 44;
+				let y = e.touches[0].clientY - 44;
+				// window.requestAnimationFrame(() => {
+				// });
+					drawLine(last[0], last[1], x, y);
+					last = [x, y];
+			}, 1000/60);
+		}
+		else if(!isTouchDevice) {
+			// 电脑端监听鼠标事件
+			canvas.onmousedown = (e) => {
+				painting = true;
+				last = [e.clientX - 44, e.clientY - 44];
+			}
+
+			canvas.onmousemove = throttle((e) => {
+				if (painting === true) {
+					drawLine(last[0], last[1], e.clientX - 44, e.clientY - 44);
+					last = [e.clientX - 44, e.clientY - 44];
+				}
+			}, 1000/60);
+
+			canvas.onmouseleave = () => {
+				painting = false;
+			}
+			canvas.onmouseup = () => {
+				painting = false;
+			}
+		}
+
+	</script>
+</body>
+
+</html>
