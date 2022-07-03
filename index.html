@@ -43,22 +43,11 @@
 	</div>
 
 	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
-	<!-- <script src="./throttle.js"></script> -->
+	<script src="./throttle.js"></script>
 
 	<script>
 		const canvas = document.getElementsByClassName('canvas')[0];
 		const ctx = canvas.getContext('2d');
-
-		function throttle(fn, wait) {
-	let timer = null;
-	return (function(...args) {
-		if(timer) return;
-		fn.apply(this, args);
-		timer = setTimeout(() => {
-			timer = null;
-		}, wait)
-	});
-}
 
 		let strokeColor = '#000';
 		let lineThick = 5;
